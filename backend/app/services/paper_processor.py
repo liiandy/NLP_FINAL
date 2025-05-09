@@ -229,7 +229,8 @@ class PaperProcessor:
             'title': '',
             'authors': [],
             'journal': '',
-            'year': ''
+            'year': '',
+            'keywords': [],
         }
         
         # 標題通常跨多行，收集首段連續非空行直到空行或作者標記，合併為完整標題
@@ -387,20 +388,21 @@ class PaperProcessor:
     async def process_paper(self, file_path: str) -> Dict[str, Any]:
         """處理論文文件"""
         try:
-            # 提取文本
             text = self.extract_text(file_path)
             if not text:
                 raise ValueError("無法從文件中提取文本")
 
-            # 提取元數據
             metadata = self.extract_metadata(text)
+
+            topic = None
+            keywords = []
+
             if self.openai_client:
-                # GPT-4 提取標題
                 title_resp = await self.openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title(string), authors (list), journal(string), year (string), keywords(string), topic (string)."},
-                        {"role": "user", "content": f"Parse metadata from the following academic paper text (truncated to first 10000 characters):\n\n{text[:10000]}"}
+                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title(string), authors(list), journal(string), year(string), keywords(list), topic(string)."},
+                        {"role": "user", "content": f"Parse metadata from the following academic paper text (first 10000 characters):\n\n{text[:10000]}"}
                     ],
                     temperature=0
                 )
@@ -409,22 +411,17 @@ class PaperProcessor:
                     metadata['title'] = meta_json.get('title', metadata['title'])
                     metadata['authors'] = meta_json.get('authors', metadata['authors'])
                     metadata['year'] = meta_json.get('year', metadata['year'])
-                    metadata['topic'] = meta_json.get('topic', None)
                     metadata['journal'] = meta_json.get('journal', metadata['journal'])
-                    metadata['keywords'] = meta_json.get('keywords', metadata['keywords'])
-                    # metadata['github_link'] = meta_json.get('github_link', None)
-                    # metadata['file_path'] = file_path
+                    keywords = meta_json.get('keywords', [])
+                    topic = meta_json.get('topic', None)
                 except Exception:
-                    # fallback to existing extraction
-                    pass
+                    logger.warning("GPT metadata parsing failed, fallback to local extraction.")
 
-            # 提取摘要
+            # 本地摘要提取
             abstract = ""
-            # 之後摘要和 keywords 處理保持不變
             lines = text.split('\n')
             for i, line in enumerate(lines):
                 if "abstract" in line.lower():
-                    # 從下一行開始收集摘要
                     abstract_lines = []
                     for next_line in lines[i+1:]:
                         if next_line.strip() and not any(marker in next_line.lower() for marker in ["introduction", "keywords", "1."]):
@@ -433,11 +430,10 @@ class PaperProcessor:
                             break
                     abstract = " ".join(abstract_lines)
                     break
-            
-            # 如果沒有找到摘要，使用前 500 個字符作為摘要
+
             if not abstract:
                 abstract = text[:500]
-            # 使用 GPT-4 提取英文摘要
+
             if self.openai_client:
                 abstract_resp = await self.openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
@@ -448,13 +444,12 @@ class PaperProcessor:
                     temperature=0
                 )
                 abstract = abstract_resp.choices[0].message.content.strip()
-            
-            # 生成摘要（改為使用全文由 GPT-4 理解後生成）
+
             summary = await self.generate_summary(text)
-            
-            # 提取關鍵詞
-            keywords = self.extract_keywords(text)
-            
+
+            if not keywords:
+                keywords = self.extract_keywords(text)
+
             return {
                 "title": metadata.get('title', ''),
                 "authors": metadata.get('authors', []),
@@ -462,7 +457,8 @@ class PaperProcessor:
                 "year": metadata.get('year', ''),
                 "abstract": abstract,
                 "summary": summary,
-                "keywords": metadata.get('keywords', '')
+                "keywords": keywords,
+                "topic": topic or ''
             }
         except Exception as e:
             logger.error(f"處理論文時發生錯誤: {str(e)}", exc_info=True)
