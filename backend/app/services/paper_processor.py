@@ -317,7 +317,7 @@ class PaperProcessor:
                 return {"content": "摘要內容不可用", "language": "zh-TW"}
 
             response = await self.openai_client.chat.completions.create(
-                model="gpt-4",
+                model="gpt-3.5-turbo",
                 messages=[
                     {
                         "role": "system",
@@ -325,7 +325,7 @@ class PaperProcessor:
                     },
                     {
                         "role": "user",
-                        "content": text
+                        "content": text[:10000]
                     }
                 ],
                 temperature=0.3,
@@ -397,10 +397,10 @@ class PaperProcessor:
             if self.openai_client:
                 # GPT-4 提取標題
                 title_resp = await self.openai_client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title, authors (list), journal(string), year (string), topic (string)."},
-                        {"role": "user", "content": f"Parse metadata from the following academic paper text:\n\n{text}"}
+                        {"role": "user", "content": f"Parse metadata from the following academic paper text (truncated to first 10000 characters):\n\n{text[:10000]}"}
                     ],
                     temperature=0
                 )
@@ -439,10 +439,10 @@ class PaperProcessor:
             # 使用 GPT-4 提取英文摘要
             if self.openai_client:
                 abstract_resp = await self.openai_client.chat.completions.create(
-                    model="gpt-4",
+                    model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are an academic paper abstract extractor. Provide a concise and accurate abstract in English."},
-                        {"role": "user", "content": text}
+                        {"role": "user", "content": text[:5000]}
                     ],
                     temperature=0
                 )

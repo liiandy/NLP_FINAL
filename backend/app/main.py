@@ -38,7 +38,7 @@ async def root():
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
-        "app.main:app",
+        "backend.app.main:app",
         host="127.0.0.1",
         port=8000,
         reload=True,
@@ -46,4 +46,4 @@ if __name__ == "__main__":
         timeout_graceful_shutdown=120,  # 增加優雅關閉的超時時間
         limit_concurrency=100,  # 增加並發連接數
         limit_max_requests=1000,  # 增加最大請求數
-    ) 
+    )
