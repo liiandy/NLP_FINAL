@@ -14,7 +14,7 @@ app = FastAPI(
 # 設置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 在生產環境中應該設置具體的域名
+    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 在生產環境中應該設置具體的域名
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -46,4 +46,5 @@ if __name__ == "__main__":
         timeout_graceful_shutdown=120,  # 增加優雅關閉的超時時間
         limit_concurrency=100,  # 增加並發連接數
         limit_max_requests=1000,  # 增加最大請求數
+    log_level="info",
     )

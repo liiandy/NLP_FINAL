@@ -399,7 +399,7 @@ class PaperProcessor:
                 title_resp = await self.openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[
-                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title, authors (list), journal(string), year (string), topic (string)."},
+                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title(string), authors (list), journal(string), year (string), keywords(string), topic (string)."},
                         {"role": "user", "content": f"Parse metadata from the following academic paper text (truncated to first 10000 characters):\n\n{text[:10000]}"}
                     ],
                     temperature=0
@@ -411,6 +411,7 @@ class PaperProcessor:
                     metadata['year'] = meta_json.get('year', metadata['year'])
                     metadata['topic'] = meta_json.get('topic', None)
                     metadata['journal'] = meta_json.get('journal', metadata['journal'])
+                    metadata['keywords'] = meta_json.get('keywords', metadata['keywords'])
                     # metadata['github_link'] = meta_json.get('github_link', None)
                     # metadata['file_path'] = file_path
                 except Exception:
@@ -461,7 +462,7 @@ class PaperProcessor:
                 "year": metadata.get('year', ''),
                 "abstract": abstract,
                 "summary": summary,
-                "keywords": keywords
+                "keywords": metadata.get('keywords', '')
             }
         except Exception as e:
             logger.error(f"處理論文時發生錯誤: {str(e)}", exc_info=True)

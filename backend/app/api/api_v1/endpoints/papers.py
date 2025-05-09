@@ -17,6 +17,21 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+
+from ....services.auth import get_current_admin_user
+from ....models.paper import Paper as PaperModel
+from sqlalchemy import text
+from sqlalchemy.orm.exc import StaleDataError
+
+@router.delete("/{paper_id}", status_code=204)
+def delete_paper(paper_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_admin_user)):
+    result = db.execute(text("DELETE FROM papers WHERE id = :paper_id"), {"paper_id": paper_id})
+    if result.rowcount == 0:
+        raise HTTPException(status_code=404, detail="Paper not found")
+    db.commit()
+    return {}
 paper_processor = PaperProcessor()
 
 @router.post("/upload", response_model=PaperResponse)

@@ -15,13 +15,13 @@ export interface Paper {
 }
 
 export const paperService = {
-  async getPaper(id: number): Promise<Paper> {
-    const response = await axios.get(`${API_URL}/papers/${id}`);
+  async getAllPapers(): Promise<Paper[]> {
+    const response = await axios.get(`${API_URL}/papers`);
     return response.data;
   },
 
-  async listPapers(): Promise<Paper[]> {
-    const response = await axios.get(`${API_URL}/papers`);
+  async getPaper(id: number): Promise<Paper> {
+    const response = await axios.get(`${API_URL}/papers/${id}`);
     return response.data;
   },
 
@@ -34,5 +34,22 @@ export const paperService = {
       },
     });
     return response.data;
+  },
+
+  async searchPapers(query: string): Promise<Paper[]> {
+    const response = await axios.get(`${API_URL}/papers/search?q=${query}`);
+    return response.data;
+  },
+
+  async listPapers(): Promise<Paper[]> {
+    const response = await axios.get(`${API_URL}/papers/`);
+    return response.data;
+  },
+
+  async deletePaper(id: number): Promise<void> {
+    await axios.delete(`${API_URL}/papers/${id}`, { 
+      headers: { Authorization: "Bearer dummy_admin_token" },
+      withCredentials: true 
+    });
   }
 };
