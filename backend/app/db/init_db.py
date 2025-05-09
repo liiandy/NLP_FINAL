@@ -1,6 +1,6 @@
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from .base_class import Base
+from backend.app.db.base_class import Base
 from ..models.paper import Paper, Topic, Keyword, Summary
 from ..core.config import settings
 import logging
@@ -42,4 +42,4 @@ def init_db():
         db.close()
 
 if __name__ == "__main__":
-    init_db() 
+    init_db()

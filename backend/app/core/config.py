@@ -2,8 +2,10 @@ from pydantic_settings import BaseSettings
 from typing import Optional
 import os
 from dotenv import load_dotenv
+import os
 
-load_dotenv()
+# Explicitly load the .env file from the project root directory
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", ".env"))
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "論文整理系統"
@@ -32,10 +34,8 @@ class Settings(BaseSettings):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.SQLALCHEMY_DATABASE_URI = (
-            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_SERVER}/{self.POSTGRES_DB}"
-        )
+        self.SQLALCHEMY_DATABASE_URI = "postgresql://andy:postgres@localhost/paper_management"
+        print("DEBUG: SQLALCHEMY_DATABASE_URI =", self.SQLALCHEMY_DATABASE_URI)
         
         # 確保上傳目錄存在
         os.makedirs(self.UPLOAD_FOLDER, exist_ok=True)
