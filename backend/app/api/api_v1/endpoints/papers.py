@@ -44,7 +44,7 @@ async def upload_paper(
         
         # 創建論文記錄
         paper = Paper(
-            title=paper_data["title"],
+            title=paper_data["title"][:500],
             authors=str(paper_data["authors"]),  # 將列表轉換為字符串
             journal=paper_data["journal"],
             year=paper_data["year"],
@@ -208,4 +208,4 @@ def search_papers(
         ]
     except Exception as e:
         logger.error(f"搜尋論文時發生錯誤: {str(e)}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"搜尋論文時發生錯誤: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"搜尋論文時發生錯誤: {str(e)}")

@@ -12,6 +12,7 @@ import torch
 from ..core.config import settings
 from fastapi import HTTPException
 from openai import AsyncOpenAI
+import json
 
 # 設置日誌
 logging.basicConfig(level=logging.INFO)
@@ -216,9 +217,15 @@ class PaperProcessor:
             'year': ''
         }
         
-        # 標題通常在文件開頭
-        if lines:
-            metadata['title'] = lines[0].strip()
+        # 標題通常跨多行，收集首段連續非空行直到空行或作者標記，合併為完整標題
+        title_lines: List[str] = []
+        author_markers = ['Authors:', 'Author:', 'By:', 'Written by:', 'Contributors:']
+        for l in lines:
+            clean = l.strip()
+            if not clean or any(marker.lower() in clean.lower() for marker in author_markers):
+                break
+            title_lines.append(clean)
+        metadata['title'] = ' '.join(title_lines)
         
         # 作者提取邏輯
         author_patterns = [
@@ -383,9 +390,29 @@ class PaperProcessor:
 
             # 提取元數據
             metadata = self.extract_metadata(text)
-            
+            if self.openai_client:
+                # GPT-4 提取標題
+                title_resp = await self.openai_client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title, authors (list), year (string), topic (string)."},
+                        {"role": "user", "content": f"Parse metadata from the following academic paper text:\n\n{text}"}
+                    ],
+                    temperature=0
+                )
+                try:
+                    meta_json = json.loads(title_resp.choices[0].message.content.strip())
+                    metadata['title'] = meta_json.get('title', metadata['title'])
+                    metadata['authors'] = meta_json.get('authors', metadata['authors'])
+                    metadata['year'] = meta_json.get('year', metadata['year'])
+                    metadata['topic'] = meta_json.get('topic', None)
+                except Exception:
+                    # fallback to existing extraction
+                    pass
+
             # 提取摘要
             abstract = ""
+            # 之後摘要和 keywords 處理保持不變
             lines = text.split('\n')
             for i, line in enumerate(lines):
                 if "abstract" in line.lower():
@@ -420,4 +447,4 @@ class PaperProcessor:
             }
         except Exception as e:
             logger.error(f"處理論文時發生錯誤: {str(e)}", exc_info=True)
-            raise 
+            raise

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import { paperService } from '../services/api';
@@ -8,12 +8,20 @@ import { Card, CardContent, Typography, Grid, Chip, Box } from '@mui/material';
 
 const Home: React.FC = () => {
   const location = useLocation();
-  const { processingPaper } = location.state || {};
+  const { newPaperId } = location.state || {};
+  const [processingPaperId, setProcessingPaperId] = useState<number | null>(newPaperId || null);
 
   const { data: papers, isLoading, error } = useQuery({
     queryKey: ['papers'],
-    queryFn: paperService.listPapers
+    queryFn: paperService.listPapers,
+    refetchInterval: processingPaperId ? 2000 : false,
   });
+
+  useEffect(() => {
+    if (processingPaperId && papers?.find(p => p.id === processingPaperId)) {
+      setProcessingPaperId(null);
+    }
+  }, [papers, processingPaperId]);
 
   if (isLoading) {
     return <Spinner />;
@@ -29,7 +37,7 @@ const Home: React.FC = () => {
         論文列表
       </Typography>
       <Grid container spacing={2}>
-        {processingPaper && (
+        {processingPaperId && (
           <Grid item xs={12} sm={6} md={4}>
             <Card variant="outlined" sx={{ height: '100%', animation: 'pulse 1.5s infinite' }}>
               <CardContent>
@@ -41,7 +49,7 @@ const Home: React.FC = () => {
             </Card>
           </Grid>
         )}
-        {papers?.map((paper) => (
+        {papers?.filter((paper) => paper.id !== processingPaperId).map((paper) => (
           <Grid item key={paper.id} xs={12} sm={6} md={4}>
             <Card
               variant="outlined"
@@ -49,7 +57,14 @@ const Home: React.FC = () => {
               onClick={() => window.location.href = `/papers/${paper.id}`}
             >
               <CardContent>
-                <Typography variant="h6" gutterBottom noWrap>
+                <Typography 
+                  variant="h6" 
+                  gutterBottom 
+                  sx={{ 
+                    wordBreak: 'break-word',
+                    whiteSpace: 'normal'
+                  }}
+                >
                   {paper.title}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
