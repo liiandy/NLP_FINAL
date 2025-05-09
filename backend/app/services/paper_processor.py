@@ -1,11 +1,23 @@
 import fitz  # PyMuPDF
+import logging
 from docx import Document
 import os
 from typing import Dict, List, Optional, Tuple, Any
 import nltk
 from nltk.tokenize import sent_tokenize
-from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
-from sentence_transformers import SentenceTransformer
+try:
+    from transformers import pipeline, AutoTokenizer, AutoModelForSeq2SeqLM
+except ImportError:
+    pipeline = None
+    AutoTokenizer = None
+    AutoModelForSeq2SeqLM = None
+    logging.error("Transformers import failed; summarization disabled")
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
+    import logging
+    logging.error("SentenceTransformer import failed; similarity and summarization pipelines disabled")
 import numpy as np
 import logging
 import torch
@@ -73,16 +85,19 @@ class PaperProcessor:
                 _summarizer = None
                 
         if _sentence_model is None:
-            try:
-                logger.info("正在加載句子模型...")
-                _sentence_model = SentenceTransformer(
-                    'all-MiniLM-L6-v2',
-                    device='cpu',
-                    cache_folder=os.path.join(os.path.expanduser("~"), ".cache", "sentence_transformers")
-                )
-                logger.info("句子模型加載完成")
-            except Exception as e:
-                logger.error(f"加載句子模型時發生錯誤: {str(e)}", exc_info=True)
+            if SentenceTransformer:
+                try:
+                    logger.info("正在加載句子模型...")
+                    _sentence_model = SentenceTransformer(
+                        'all-MiniLM-L6-v2',
+                        device='cpu',
+                        cache_folder=os.path.join(os.path.expanduser("~"), ".cache", "sentence_transformers")
+                    )
+                    logger.info("句子模型加載完成")
+                except Exception as e:
+                    logger.error(f"加載句子模型時發生錯誤: {str(e)}", exc_info=True)
+                    _sentence_model = None
+            else:
                 _sentence_model = None
             
         self.summarizer = _summarizer
@@ -296,43 +311,32 @@ class PaperProcessor:
         return metadata
 
     async def generate_summary(self, text: str) -> Dict[str, str]:
-        """使用 GPT-4 生成繁體中文摘要"""
+        """使用 GPT-4 直接對全文進行摘要"""
         try:
-            # 如果文本為空，返回空摘要
             if not text or not text.strip():
-                return {
-                    "content": "摘要內容不可用",
-                    "language": "zh-TW"
-                }
+                return {"content": "摘要內容不可用", "language": "zh-TW"}
 
             response = await self.openai_client.chat.completions.create(
                 model="gpt-4",
                 messages=[
                     {
                         "role": "system",
-                        "content": "你是一位專業的學術論文摘要專家。請將以下英文論文摘要翻譯成繁體中文，並保持專業性和準確性。摘要應該簡潔明瞭，突出論文的主要貢獻和發現。如果輸入的文本不是摘要，請先提取摘要，然後再進行翻譯。"
+                        "content": "你是一位專業的學術論文摘要專家。請閱讀以下完整論文內容，並以繁體中文撰寫一段精煉摘要，突出論文的主要貢獻和發現。"
                     },
                     {
                         "role": "user",
-                        "content": f"請將以下論文摘要翻譯成繁體中文：\n\n{text}"
+                        "content": text
                     }
                 ],
                 temperature=0.3,
                 max_tokens=1000
             )
-            
+
             summary = response.choices[0].message.content.strip()
-            
-            return {
-                "content": summary,
-                "language": "zh-TW"
-            }
+            return {"content": summary, "language": "zh-TW"}
         except Exception as e:
             logger.error(f"生成摘要時發生錯誤: {str(e)}")
-            return {
-                "content": "生成摘要時發生錯誤",
-                "language": "zh-TW"
-            }
+            return {"content": "生成摘要時發生錯誤", "language": "zh-TW"}
 
     def extract_keywords(self, text: str) -> List[str]:
         """提取關鍵詞"""
@@ -395,7 +399,7 @@ class PaperProcessor:
                 title_resp = await self.openai_client.chat.completions.create(
                     model="gpt-4",
                     messages=[
-                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title, authors (list), year (string), topic (string)."},
+                        {"role": "system", "content": "You are an academic paper parser. Extract paper metadata as JSON with keys: title, authors (list), journal(string), year (string), topic (string)."},
                         {"role": "user", "content": f"Parse metadata from the following academic paper text:\n\n{text}"}
                     ],
                     temperature=0
@@ -406,6 +410,9 @@ class PaperProcessor:
                     metadata['authors'] = meta_json.get('authors', metadata['authors'])
                     metadata['year'] = meta_json.get('year', metadata['year'])
                     metadata['topic'] = meta_json.get('topic', None)
+                    metadata['journal'] = meta_json.get('journal', metadata['journal'])
+                    # metadata['github_link'] = meta_json.get('github_link', None)
+                    # metadata['file_path'] = file_path
                 except Exception:
                     # fallback to existing extraction
                     pass
@@ -429,9 +436,20 @@ class PaperProcessor:
             # 如果沒有找到摘要，使用前 500 個字符作為摘要
             if not abstract:
                 abstract = text[:500]
+            # 使用 GPT-4 提取英文摘要
+            if self.openai_client:
+                abstract_resp = await self.openai_client.chat.completions.create(
+                    model="gpt-4",
+                    messages=[
+                        {"role": "system", "content": "You are an academic paper abstract extractor. Provide a concise and accurate abstract in English."},
+                        {"role": "user", "content": text}
+                    ],
+                    temperature=0
+                )
+                abstract = abstract_resp.choices[0].message.content.strip()
             
-            # 生成摘要
-            summary = await self.generate_summary(abstract)
+            # 生成摘要（改為使用全文由 GPT-4 理解後生成）
+            summary = await self.generate_summary(text)
             
             # 提取關鍵詞
             keywords = self.extract_keywords(text)

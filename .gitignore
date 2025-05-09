@@ -1,0 +1,15 @@
+# Ignore environment variables
+.env
+# Ignore Python virtual environments
+.venv/
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+# Frontend dependencies
+frontend/node_modules/
+# Backend uploads (local files)
+backend/uploads/
+# DOC Data
+my_own/

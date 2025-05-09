@@ -5,10 +5,12 @@ const Navbar = () => {
   return (
     <AppBar position="static">
       <Toolbar>
-        <img src="/nycu_logo.png" alt="Logo" style={{ height: 80, marginRight: 8 }} />
-        <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', fontSize: '1.8rem'}}>
-          CIF LAB
-        </Typography>
+        <RouterLink to="/home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', color: 'inherit' }}>
+          <img src="/nycu_logo.png" alt="Logo" style={{ height: 80, marginRight: 8 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 1, fontWeight: 'bold', fontSize: '1.8rem'}}>
+            CIF LAB
+          </Typography>
+        </RouterLink>
         <Box>
           <Button
             color="inherit"

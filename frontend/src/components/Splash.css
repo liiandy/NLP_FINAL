@@ -1,0 +1,60 @@
+/* 背景容器 */
+.splash-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    background: radial-gradient(circle at center, #0a0a23 0%, #000010 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1300;
+    animation: splash-fadeout 1s ease-in-out 4s forwards;
+  }
+  
+  /* 文字效果 */
+  .splash-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 4rem;
+    letter-spacing: 0.1em;
+    background: linear-gradient(90deg, #00e5ff, #ff00d6, #ffea00, #00ff2a);
+    background-size: 400% 400%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation:
+      splash-glow 3s ease-in-out infinite,
+      splash-gradient 8s ease-in-out infinite;
+  }
+  
+  /* 發光動畫 */
+  @keyframes splash-glow {
+    0%, 100% {
+      text-shadow:
+        0 0 12px rgba(0, 229, 255, 0.6),
+        0 0 25px rgba(255, 0, 214, 0.5),
+        0 0 40px rgba(255, 255, 255, 0.3);
+    }
+    50% {
+      text-shadow:
+        0 0 20px rgba(0, 255, 42, 0.7),
+        0 0 35px rgba(0, 229, 255, 0.6),
+        0 0 50px rgba(255, 255, 255, 0.4);
+    }
+  }
+  
+  /* 背景漸層動畫 */
+  @keyframes splash-gradient {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  
+  /* 結尾淡出動畫 */
+  @keyframes splash-fadeout {
+    to {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+      visibility: hidden;
+    }
+  }
+  
