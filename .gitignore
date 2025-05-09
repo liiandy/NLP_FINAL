@@ -13,3 +13,5 @@ frontend/node_modules/
 backend/uploads/
 # DOC Data
 my_own/
+# Environment variables
+.env
