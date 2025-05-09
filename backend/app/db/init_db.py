@@ -1,7 +1,12 @@
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from backend.app.db.base_class import Base
 from ..models.paper import Paper, Topic, Keyword, Summary
+from ..models.login_attempt import LoginAttempt
 from ..core.config import settings
 import logging
 
@@ -22,6 +27,7 @@ def init_db():
         conn.execute(text("DROP TABLE IF EXISTS topics CASCADE"))
         conn.execute(text("DROP TABLE IF EXISTS keywords CASCADE"))
         conn.execute(text("DROP TABLE IF EXISTS summaries CASCADE"))
+        conn.execute(text("DROP TABLE IF EXISTS users CASCADE"))
         conn.commit()
     
     # 創建所有表格

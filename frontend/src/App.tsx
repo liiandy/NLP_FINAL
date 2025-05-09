@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import Upload from './pages/Upload';
 import Search from './pages/Search';
 import PaperDetail from './pages/PaperDetail';
+import Login from './pages/Login';
 import Splash from './components/Splash';
 
 // 創建 QueryClient 實例
@@ -51,6 +52,7 @@ const AppRouter: React.FC = () => {
           <Route path="/upload" element={<Upload />} />
           <Route path="/search" element={<Search />} />
           <Route path="/papers/:id" element={<PaperDetail />} />
+          <Route path="/login" element={<Login />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
     </>

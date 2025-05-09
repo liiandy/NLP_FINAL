@@ -33,10 +33,17 @@ const Navbar = () => {
           >
             搜索論文
           </Button>
+          <Button
+            color="inherit"
+            component={RouterLink}
+            to="/login"
+          >
+            登入
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
   );
 };
 
-export default Navbar; 
+export default Navbar;
