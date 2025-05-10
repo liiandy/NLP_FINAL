@@ -47,8 +47,9 @@ export const paperService = {
   },
 
   async deletePaper(id: number): Promise<void> {
+    const token = localStorage.getItem('token') || "dummy_admin_token";
     await axios.delete(`${API_URL}/papers/${id}`, { 
-      headers: { Authorization: "Bearer dummy_admin_token" },
+      headers: { Authorization: `Bearer ${token}` },
       withCredentials: true 
     });
   }

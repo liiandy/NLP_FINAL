@@ -5,23 +5,22 @@ from passlib.context import CryptContext
 # Set auto_error=False to avoid automatic 401 when no token is provided.
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
+import jwt
+from jwt import PyJWTError
+from ..core.config import settings
+
 def get_current_user(token: str = Depends(oauth2_scheme)):
-    print("Received token:", token)
     if not token:
         raise HTTPException(status_code=401, detail="Token is missing")
-    # Remove 'Bearer ' prefix if present
     token = token.replace("Bearer ", "")
-    if token == "dummy_admin_token":
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except PyJWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    # 在此可加入其他 token 驗證邏輯
-    raise HTTPException(status_code=401, detail="Invalid token")
+    return payload
 
 def get_current_admin_user(current_user: dict = Depends(get_current_user)):
-    """
-    Dependency that verifies if the current user is an admin.
-    Raises an HTTPException if the user does not have admin privileges.
-    """
-    if not current_user.get("is_admin", False):
+    if current_user.get("role") != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough privileges"

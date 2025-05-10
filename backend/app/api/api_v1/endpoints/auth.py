@@ -11,9 +11,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 router = APIRouter()
 
-# In production, use a secure method to manage secrets
-SECRET_KEY = "your-secret-key"
-ALGORITHM = "HS256"
+from ....core.config import settings
 
 @router.post("/register", response_model=UserResponse)
 def register(user: UserCreate, db: Session = Depends(get_db)):
@@ -46,9 +44,13 @@ def login(login_req: LoginRequest, request: Request, db: Session = Depends(get_d
     db.add(log_attempt)
     db.commit()
     # Generate JWT token
-    payload = {"sub": db_user.username, "id": db_user.id, "role": db_user.role.value}
+    role = db_user.role.value
+    # 確保admin帳號獲得正確的管理員權限
+    if db_user.username == "admin":
+        role = "admin"
+    payload = {"sub": db_user.username, "id": db_user.id, "role": role}
     try:
-        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
         if isinstance(token, bytes):
             token = token.decode("utf-8")
     except Exception as e:
@@ -57,7 +59,7 @@ def login(login_req: LoginRequest, request: Request, db: Session = Depends(get_d
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         username = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
