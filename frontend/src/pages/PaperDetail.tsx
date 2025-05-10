@@ -34,33 +34,49 @@ const PaperDetail: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">{paper.title}</h1>
+    <div style={{
+      maxWidth: 800,
+      margin: '40px auto',
+      padding: '32px 32px 24px 32px',
+      background: 'rgba(255,255,255,0.07)',
+      borderRadius: 16,
+      boxShadow: '0 8px 40px 0 rgba(0,255,255,0.10)',
+      border: '1.5px solid #0ff3',
+      backdropFilter: 'blur(2px)'
+    }}>
+      <h1
+        style={{
+          fontSize: '2.2rem',
+          fontWeight: 800,
+          color: '#0ff',
+          marginBottom: 18,
+          textShadow: '0 0 12px #0ff6'
+        }}
+      >
+        {paper.title}
+      </h1>
       {(paper.uploader_name || paper.created_at) && (
-        <div className="mb-4 text-gray-600 text-sm">
+        <div style={{ marginBottom: 18, color: '#0ff', fontWeight: 500, fontSize: 15 }}>
           {paper.uploader_name && <span>上傳者: {paper.uploader_name}</span>}
           {paper.uploader_name && paper.created_at && <span>　|　</span>}
           {paper.created_at && <span>上傳時間: {new Date(paper.created_at).toLocaleString()}</span>}
         </div>
       )}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">作者</h2>
-        <p>{paper.authors.join(', ')}</p>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>作者</h2>
+        <p style={{ color: '#fff', fontWeight: 500 }}>{paper.authors.join(', ')}</p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">期刊</h2>
-        <p>{paper.journal}</p>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>期刊</h2>
+        <p style={{ color: '#aaa', fontWeight: 500 }}>{paper.journal}</p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">年份</h2>
-        <p>{paper.year}</p>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>年份</h2>
+        <p style={{ color: '#aaa', fontWeight: 500 }}>{paper.year}</p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">主題</h2>
-        <p>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>主題</h2>
+        <p style={{ color: '#fff', fontWeight: 500 }}>
           {paper.topic
             ? typeof paper.topic === 'object'
               ? paper.topic.name
@@ -68,15 +84,13 @@ const PaperDetail: React.FC = () => {
             : '未分類'}
         </p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">摘要</h2>
-        <p className="whitespace-pre-wrap">{paper.abstract}</p>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>摘要</h2>
+        <p style={{ color: '#fff', fontWeight: 500, whiteSpace: 'pre-wrap' }}>{paper.abstract}</p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">摘要(中文)</h2>
-        <p className="whitespace-pre-wrap">
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>摘要(中文)</h2>
+        <p style={{ color: '#fff', fontWeight: 500, whiteSpace: 'pre-wrap' }}>
           {paper.summary
             ? typeof paper.summary === 'object'
               ? paper.summary.content
@@ -84,16 +98,21 @@ const PaperDetail: React.FC = () => {
             : '無摘要'}
         </p>
       </div>
-
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">關鍵詞</h2>
+      <div style={{ marginBottom: 18 }}>
+        <h2 style={{ fontSize: 20, fontWeight: 700, color: '#0ff', marginBottom: 6 }}>關鍵詞</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {paper.keywords.map((keyword: any) => (
             <Chip
               key={keyword.id || keyword}
               label={keyword.word || keyword}
               size="small"
-              color="primary"
+              sx={{
+                background: 'rgba(0,255,255,0.12)',
+                color: '#0ff',
+                border: '1px solid #0ff7',
+                fontWeight: 600,
+                letterSpacing: '0.03em'
+              }}
               variant="outlined"
             />
           ))}

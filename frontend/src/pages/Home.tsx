@@ -55,7 +55,7 @@ const Home: React.FC = () => {
 
   return (
     <Box sx={{ flexGrow: 1, p: 4 }}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={{ color: '#bde0fe', fontWeight: 700, textShadow: '0 0 8px #0ff4' }}>
         論文列表
       </Typography>
       <Grid container spacing={2}>
@@ -75,7 +75,18 @@ const Home: React.FC = () => {
           <Grid item key={paper.id} xs={12} sm={6} md={4}>
             <Card
               variant="outlined"
-              sx={{ height: '100%', cursor: 'pointer', position: 'relative', '&:hover': { boxShadow: 3 } }}
+              sx={{
+                height: '100%',
+                cursor: 'pointer',
+                position: 'relative',
+                background: 'rgba(255,255,255,0.07)',
+                borderRadius: 4,
+                boxShadow: '0 4px 24px 0 rgba(0,255,255,0.08)',
+                border: '1.5px solid #0ff3',
+                backdropFilter: 'blur(2px)',
+                transition: 'box-shadow 0.2s',
+                '&:hover': { boxShadow: '0 8px 32px 0 #0ff6' }
+              }}
               onClick={() => navigate(`/papers/${paper.id}`)}
             >
               {isAdmin && (
@@ -103,27 +114,42 @@ const Home: React.FC = () => {
                 </IconButton>
               )}
               <CardContent>
-                <Typography 
-                  variant="h6" 
-                  gutterBottom 
-                  sx={{ 
+                <Typography
+                  variant="h6"
+                  gutterBottom
+                  sx={{
                     wordBreak: 'break-word',
-                    whiteSpace: 'normal'
+                    whiteSpace: 'normal',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                    color: '#0ff',
+                    textShadow: '0 0 8px #0ff4'
                   }}
                 >
                   {paper.title}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
+                <Typography variant="body2" sx={{ color: '#aaa', fontWeight: 500 }}>
                   {paper.journal} ({paper.year})
                 </Typography>
                 {paper.uploader_name && (
-                  <Typography variant="body2" color="textSecondary">
+                  <Typography variant="body2" sx={{ color: '#0ff', fontWeight: 500 }}>
                     上傳者: {paper.uploader_name}
                   </Typography>
                 )}
                 <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
                   {paper.keywords?.map((keyword, index) => (
-                    <Chip key={index} label={keyword} size="small" color="primary" />
+                    <Chip
+                      key={index}
+                      label={keyword}
+                      size="small"
+                      sx={{
+                        background: 'rgba(0,255,255,0.12)',
+                        color: '#0ff',
+                        border: '1px solid #0ff7',
+                        fontWeight: 600,
+                        letterSpacing: '0.03em'
+                      }}
+                    />
                   ))}
                 </Box>
               </CardContent>
