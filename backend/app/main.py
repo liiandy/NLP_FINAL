@@ -14,7 +14,12 @@ app = FastAPI(
 # 設置 CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://localhost:5173"],  # 在生產環境中應該設置具體的域名
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:5173"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -33,6 +38,8 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/")
 async def root():
     return {"message": "歡迎使用論文整理系統"}
+
+print("DEBUG: FastAPI routes:", app.routes)
 
 # 配置 uvicorn 的運行參數
 if __name__ == "__main__":

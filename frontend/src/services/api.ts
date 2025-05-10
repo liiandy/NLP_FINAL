@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+const API_BASE_URL = 'http://localhost:8000/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -13,6 +13,12 @@ const api = axios.create({
 // 添加請求攔截器
 api.interceptors.request.use(
   (config) => {
+    // 自動加上 Authorization header
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
     console.log('Request:', config);
     return config;
   },

@@ -60,7 +60,9 @@ class PaperList(PaperBase):
     summary: Optional[str] = None
     keywords: List[str] = []
     topics: List[str] = []
-    
+    uploader_id: Optional[int] = None
+    uploader_name: Optional[str] = None
+
     class Config:
         from_attributes = True
 
@@ -73,6 +75,8 @@ class PaperResponse(PaperBase):
     keywords: List[Keyword] = []
     topic: Optional[Topic] = None
     summary: Optional[Summary] = None
-    
+    uploader_id: Optional[int] = None
+    uploader_name: Optional[str] = None
+
     class Config:
-        from_attributes = True 
+        from_attributes = True

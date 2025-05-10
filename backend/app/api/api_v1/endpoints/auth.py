@@ -72,4 +72,12 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
 
 @router.get("/me")
 def get_me(current_user: User = Depends(get_current_user)):
-    return {"user": {"id": current_user.id, "name": current_user.name, "username": current_user.username, "avatar": current_user.avatar, "role": current_user.role.value}}
+    return {
+        "user": {
+            "id": current_user.id,
+            "name": getattr(current_user, "name", None),
+            "username": current_user.username,
+            "avatar": getattr(current_user, "avatar", None),
+            "role": current_user.role.value
+        }
+    }

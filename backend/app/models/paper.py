@@ -25,13 +25,18 @@ class Paper(Base):
     github_link = Column(String(500), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-    
+
+    # 新增：上傳者
+    uploader_id = Column(Integer, ForeignKey('users.id', ondelete='SET NULL'), nullable=True)
+    uploader = relationship("User", back_populates="uploaded_papers")
+
     # 關聯
     topic_id = Column(Integer, ForeignKey('topics.id', ondelete='SET NULL'), nullable=True)
     topic = relationship("Topic", back_populates="papers")
     keywords = relationship("Keyword", secondary=paper_keyword, back_populates="papers")
     summary = relationship("Summary", back_populates="paper", uselist=False, cascade="all, delete-orphan")
 
+# 在 User model 也要加上 uploaded_papers 關聯
 class Topic(Base):
     __tablename__ = "topics"
 
@@ -57,4 +62,4 @@ class Summary(Base):
     content = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     
-    paper = relationship("Paper", back_populates="summary") 
+    paper = relationship("Paper", back_populates="summary")

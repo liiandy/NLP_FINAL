@@ -34,10 +34,13 @@ def delete_paper(paper_id: int, db: Session = Depends(get_db), current_user=Depe
     return {}
 paper_processor = PaperProcessor()
 
+from ....services.auth import get_current_user
+
 @router.post("/upload", response_model=PaperResponse)
 async def upload_paper(
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
 ):
     """上傳並處理論文文件"""
     try:
@@ -57,7 +60,7 @@ async def upload_paper(
             created_at=datetime.utcnow()
         )
         
-        # 創建論文記錄
+        # 創建論文記錄，記錄上傳者
         paper = Paper(
             title=paper_data["title"][:500],
             authors=str(paper_data["authors"]),  # 將列表轉換為字符串
@@ -65,7 +68,8 @@ async def upload_paper(
             year=paper_data["year"],
             abstract=paper_data["abstract"],
             file_path=file_path,
-            summary=summary  # 直接設置 summary 關係
+            summary=summary,  # 直接設置 summary 關係
+            uploader_id=current_user["id"]
         )
         
         # 添加關鍵詞
@@ -97,7 +101,9 @@ async def upload_paper(
             updated_at=paper.updated_at,
             topic=paper.topic,
             summary=paper.summary,
-            keywords=paper.keywords
+            keywords=paper.keywords,
+            uploader_id=paper.uploader_id,
+            uploader_name=current_user.get("name") or current_user.get("username")
         )
         
         return response
@@ -131,7 +137,9 @@ def list_papers(
                 updated_at=paper.updated_at,
                 topic=paper.topic.name if paper.topic else None,
                 summary=paper.summary.content if paper.summary else None,
-                keywords=[k.word for k in paper.keywords]
+                keywords=[k.word for k in paper.keywords],
+                uploader_id=paper.uploader_id,
+                uploader_name=paper.uploader.name if paper.uploader and paper.uploader.name else (paper.uploader.username if paper.uploader else None)
             )
             for paper in papers
         ]
@@ -177,7 +185,9 @@ def get_paper(
             keywords=[{
                 'id': k.id,
                 'word': k.word
-            } for k in paper.keywords]
+            } for k in paper.keywords],
+            uploader_id=paper.uploader_id,
+            uploader_name=paper.uploader.name if paper.uploader and paper.uploader.name else (paper.uploader.username if paper.uploader else None)
         )
         return response
     except HTTPException:

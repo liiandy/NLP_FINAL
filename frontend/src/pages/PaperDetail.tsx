@@ -1,7 +1,7 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { paperService, type Paper, type Keyword } from '../services/api';
+import { paperService, type Paper } from '../services/paperService';
 import { Spinner } from '../components/Spinner';
 import { ErrorMessage } from '../components/ErrorMessage';
 import Chip from '@mui/material/Chip';
@@ -36,7 +36,13 @@ const PaperDetail: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-4">{paper.title}</h1>
-      
+      {(paper.uploader_name || paper.created_at) && (
+        <div className="mb-4 text-gray-600 text-sm">
+          {paper.uploader_name && <span>上傳者: {paper.uploader_name}</span>}
+          {paper.uploader_name && paper.created_at && <span>　|　</span>}
+          {paper.created_at && <span>上傳時間: {new Date(paper.created_at).toLocaleString()}</span>}
+        </div>
+      )}
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">作者</h2>
         <p>{paper.authors.join(', ')}</p>
@@ -54,7 +60,13 @@ const PaperDetail: React.FC = () => {
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">主題</h2>
-        <p>{paper.topic?.name || '未分類'}</p>
+        <p>
+          {paper.topic
+            ? typeof paper.topic === 'object'
+              ? paper.topic.name
+              : paper.topic
+            : '未分類'}
+        </p>
       </div>
 
       <div className="mb-6">
@@ -64,16 +76,22 @@ const PaperDetail: React.FC = () => {
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">摘要(中文)</h2>
-        <p className="whitespace-pre-wrap">{paper.summary?.content || '無摘要'}</p>
+        <p className="whitespace-pre-wrap">
+          {paper.summary
+            ? typeof paper.summary === 'object'
+              ? paper.summary.content
+              : paper.summary
+            : '無摘要'}
+        </p>
       </div>
 
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-2">關鍵詞</h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {paper.keywords.map((keyword: Keyword) => (
+          {paper.keywords.map((keyword: any) => (
             <Chip
-              key={keyword.id}
-              label={keyword.word}
+              key={keyword.id || keyword}
+              label={keyword.word || keyword}
               size="small"
               color="primary"
               variant="outlined"

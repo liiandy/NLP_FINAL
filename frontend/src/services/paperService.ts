@@ -8,10 +8,13 @@ export interface Paper {
   authors: string[];
   journal: string;
   year: string;
-  topic: string;
+  topic?: any;
   abstract: string;
-  summary: string;
+  summary?: any;
   keywords: string[];
+  uploader_id?: number;
+  uploader_name?: string;
+  created_at?: string;
 }
 
 export const paperService = {
@@ -28,10 +31,12 @@ export const paperService = {
   async uploadPaper(file: File) {
     const formData = new FormData();
     formData.append('file', file);
+    const token = localStorage.getItem('token');
     const response = await axios.post(`${API_URL}/papers/upload`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
-      },
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
     });
     return response.data;
   },

@@ -38,6 +38,7 @@ const Login = () => {
       }
 
       const data = await response.json();
+      console.log('login response data:', data);
 
       // ✅ 存入登入資訊
       localStorage.setItem('token', data.access_token);
@@ -50,7 +51,8 @@ const Login = () => {
       }
 
       // ✅ 導向首頁
-      navigate('/home');
+      window.location.reload();
+      // navigate('/home');
     } catch (err) {
       console.error('Login error:', err);
       setError('An error occurred during login.');
