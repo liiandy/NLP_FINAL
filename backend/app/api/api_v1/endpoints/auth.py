@@ -6,6 +6,8 @@ from ....models.user import User, RoleEnum
 from ....models.login_attempt import LoginAttempt
 from ....services import auth
 import jwt
+from fastapi.security import OAuth2PasswordBearer
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/login")
 
 router = APIRouter()
 
@@ -45,5 +47,27 @@ def login(login_req: LoginRequest, request: Request, db: Session = Depends(get_d
     db.commit()
     # Generate JWT token
     payload = {"sub": db_user.username, "id": db_user.id, "role": db_user.role.value}
-    token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+    try:
+        token = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
+        if isinstance(token, bytes):
+            token = token.decode("utf-8")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Token generation error: " + str(e))
     return LoginResponse(access_token=token)
+
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except jwt.JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    user = db.query(User).filter(User.username == username).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    return user
+
+@router.get("/me")
+def get_me(current_user: User = Depends(get_current_user)):
+    return {"user": {"id": current_user.id, "name": current_user.name, "username": current_user.username, "avatar": current_user.avatar, "role": current_user.role.value}}

@@ -1,55 +1,119 @@
 import React, { useState } from 'react';
+import { Container, Box, Typography, TextField, Button, Alert } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 
-const Login: React.FC = () => {
+const Login = () => {
+  const navigate = useNavigate();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const navigate = useNavigate();
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError('');
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/login', {
-        username,
-        password,
+      const response = await fetch('http://localhost:8000/api/v1/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
       });
-      localStorage.setItem('token', response.data.access_token);
-      navigate('/');
-    } catch (error: any) {
-      setErrorMsg(error.response?.data?.detail || 'Login failed');
+      if (!response.ok) {
+        const text = await response.text();
+        try {
+          const data = JSON.parse(text);
+          setError(data.detail || 'Login failed');
+        } catch (err) {
+          setError('Login failed: ' + text);
+        }
+        return;
+      }
+      const data = await response.json();
+      // Store the token and optionally user info
+      localStorage.setItem('token', data.access_token);
+      // Optionally, you could call a context method to refresh user data
+      navigate('/home');
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An error occurred during login.');
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: 'auto', padding: '1rem' }}>
-      <h2>登入</h2>
-      {errorMsg && <p style={{ color: 'red' }}>{errorMsg}</p>}
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>帳號:</label>
-          <input
-            type="text"
-            value={username}
-            onChange={e => setUsername(e.target.value)}
-            style={{ width: '100%' }}
-            required
-          />
-        </div>
-        <div style={{ marginBottom: '1rem' }}>
-          <label>密碼:</label>
-          <input
-            type="password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            style={{ width: '100%' }}
-            required
-          />
-        </div>
-        <button type="submit" style={{ width: '100%' }}>登入</button>
-      </form>
-    </div>
+    <Box
+      sx={{
+        minHeight: '100vh',
+        backgroundColor: '#000',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <Container maxWidth="xs">
+        <Box
+          sx={{
+            p: 4,
+            textAlign: 'center',
+            borderRadius: 2,
+            boxShadow: 3,
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }}
+        >
+          <Typography 
+            variant="h3" 
+            component="h1" 
+            gutterBottom 
+            sx={{ color: '#0ff', fontWeight: 'bold' }}
+          >
+            LOGIN
+          </Typography>
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
+            <TextField
+              variant="filled"
+              fullWidth
+              required
+              label="Username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              InputLabelProps={{ style: { color: '#ccc' } }}
+              sx={{
+                mb: 2,
+                input: { color: '#fff' },
+                backgroundColor: 'rgba(255,255,255,0.1)',
+              }}
+            />
+            <TextField
+              variant="filled"
+              fullWidth
+              required
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              InputLabelProps={{ style: { color: '#ccc' } }}
+              sx={{
+                mb: 3,
+                input: { color: '#fff' },
+                backgroundColor: 'rgba(255,255,255,0.1)',
+              }}
+            />
+            <Button 
+              type="submit"
+              fullWidth
+              variant="contained"
+              sx={{
+                backgroundColor: '#0ff',
+                color: '#000',
+                fontWeight: 'bold',
+                '&:hover': { backgroundColor: '#0dd' },
+              }}
+            >
+              Sign In
+            </Button>
+          </Box>
+        </Box>
+      </Container>
+    </Box>
   );
 };
 

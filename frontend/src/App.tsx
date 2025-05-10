@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import theme from './theme';
@@ -11,7 +11,7 @@ import PaperDetail from './pages/PaperDetail';
 import Login from './pages/Login';
 import Splash from './components/Splash';
 
-// 創建 QueryClient 實例
+// Create QueryClient instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -21,42 +21,42 @@ const queryClient = new QueryClient({
   },
 });
 
-// Splash + Routing handler must live inside Router to use useLocation
 const AppRouter: React.FC = () => {
   const location = useLocation();
-  const [showSplash, setShowSplash] = useState(() => {
-    // show only on first visit to '/'
-    return !localStorage.getItem('splashShown') && location.pathname === '/';
-  });
+  const [showSplash, setShowSplash] = useState(() => location.pathname === '/login');
+  const navigate = useNavigate();
 
-  useEffect(() => {
-    if (showSplash) {
-      const timer = setTimeout(() => {
-        localStorage.setItem('splashShown', 'true');
-        setShowSplash(false);
-      }, 4000);
-      return () => clearTimeout(timer);
-    }
-  }, [showSplash]);
+  const isAuthenticated = localStorage.getItem('isAuthenticated') === 'true';
+  const isLoginPage = location.pathname === '/login';
 
   if (showSplash) {
-    return <Splash onFinish={() => setShowSplash(false)} />;
+    return <Splash onFinish={() => { setShowSplash(false); navigate('/login'); }} />;
   }
 
-  return (
-    <>
-      <Navbar />
+  if (!isAuthenticated) {
+    return (
+      <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    );
+  } else {
+    return (
+      <>
+        {!isLoginPage && <Navbar />}
         <Routes>
           <Route path="/" element={<Navigate to="/home" replace />} />
           <Route path="/home" element={<Home />} />
           <Route path="/upload" element={<Upload />} />
           <Route path="/search" element={<Search />} />
           <Route path="/papers/:id" element={<PaperDetail />} />
-          <Route path="/login" element={<Login />} />
+          {/* Prevent access to /login after login */}
+          <Route path="/login" element={<Navigate to="/home" replace />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>
-    </>
-  );
+      </>
+    );
+  }
 };
 
 const App: React.FC = () => {
