@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { paperService } from '../services/paperService';
 import type { Paper } from '../services/paperService';
 import { Spinner } from '../components/Spinner';
@@ -12,6 +12,7 @@ import { AuthContext } from '../context/AuthContext';
 
 const Home: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { newPaperId } = location.state || {};
 
   const { user } = useContext(AuthContext);
@@ -75,7 +76,7 @@ const Home: React.FC = () => {
             <Card
               variant="outlined"
               sx={{ height: '100%', cursor: 'pointer', position: 'relative', '&:hover': { boxShadow: 3 } }}
-              onClick={() => window.location.href = `/papers/${paper.id}`}
+              onClick={() => navigate(`/papers/${paper.id}`)}
             >
               {isAdmin && (
                 <IconButton
